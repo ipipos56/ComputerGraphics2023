@@ -1,0 +1,5 @@
+C:/ComputerGraphics2023/CMakeFiles/Rasterization.dir
+C:/ComputerGraphics2023/CMakeFiles/Raytracing.dir
+C:/ComputerGraphics2023/CMakeFiles/DirectX12.dir
+C:/ComputerGraphics2023/CMakeFiles/ALL_BUILD.dir
+C:/ComputerGraphics2023/CMakeFiles/ZERO_CHECK.dir

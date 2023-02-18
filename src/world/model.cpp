@@ -64,6 +64,11 @@ void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 		index_buffers.push_back(std::make_shared<cg::resource<unsigned int>>(index_buffer_size));
 	}
 	textures.resize(shapes.size());
+
+	size_t vertex_num = 0;
+	for (const auto& vb : vertex_buffers)
+		vertex_num += vb->get_number_of_elements();
+	
 }
 
 float3 cg::world::model::compute_normal(const tinyobj::attrib_t& attrib, const tinyobj::mesh_t& mesh, size_t index_offset)
