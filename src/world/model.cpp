@@ -6,6 +6,8 @@
 
 #include <linalg.h>
 
+#include <iostream>
+
 
 using namespace linalg::aliases;
 using namespace cg::world;
@@ -37,6 +39,7 @@ void cg::world::model::load_obj(const std::filesystem::path& model_path)
 
 void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 {
+	size_t unindexed_vertex_count = 0;
 	for (const auto& shape: shapes)
 	{
 		size_t index_offset = 0;
@@ -57,6 +60,7 @@ void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 					vertex_buffer_size++;
 				}
 				index_buffer_size++;
+				unindexed_vertex_count++;
 			}
 			index_offset += fv;
 		}
@@ -66,9 +70,28 @@ void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 	textures.resize(shapes.size());
 
 	size_t vertex_num = 0;
+	size_t vertex_size = 0;
 	for (const auto& vb : vertex_buffers)
+	{
 		vertex_num += vb->get_number_of_elements();
-	
+		vertex_size += vb->get_size_in_bytes();
+	}
+	size_t index_num = 0;
+	size_t index_size = 0;
+	for (const auto& ib : index_buffers)
+	{
+		index_num += ib->get_number_of_elements();
+		index_size += ib->get_size_in_bytes();
+	}
+
+	std::cout << "Model has: " <<std::endl;
+	std::cout << vertex_num << " vertices" << std::endl;
+	std::cout << vertex_size << " bytes" << std::endl;
+	std::cout << index_num << " indices" << std::endl;
+	std::cout << index_size << " bytes" << std::endl;
+	std::cout << unindexed_vertex_count << " vertices without indices" << std::endl;
+	std::cout << "size of unindexed_vertex " << unindexed_vertex_count * sizeof(cg::vertex) << " bytes" << std::endl;
+
 }
 
 float3 cg::world::model::compute_normal(const tinyobj::attrib_t& attrib, const tinyobj::mesh_t& mesh, size_t index_offset)
