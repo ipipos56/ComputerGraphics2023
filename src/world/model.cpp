@@ -33,12 +33,40 @@ void cg::world::model::load_obj(const std::filesystem::path& model_path)
 
 	allocate_buffers(shapes);
 	fill_buffers(shapes, attrib, materials, model_path.parent_path());
-	
+
 }
 
 void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 {
-	tinyobj::mesh_t mesh = shapes[0].mesh;
+	for(const auto& shape : shapes)
+	{
+		size_t index_offset = 0;
+		unsigned int vertex_buffer_size = 0;
+		unsigned int index_buffer_size = 0;
+		std::map<std::tuple<int, int, int>, unsigned int> index_map;
+		const auto& mesh = shape.mesh;
+
+		for (const auto& fv : mesh.num_face_vertices)
+		{
+			for (size_t v = 0; v < fv; v++)
+			{
+				tinyobj::index_t idx = mesh.indices[index_offset + v];
+				auto idx_tuple = std::make_tuple(idx.vertex_index, idx.normal_index, idx.texcoord_index);
+				if (index_map.count(idx_tuple) == 0)
+				{
+					index_map[idx_tuple] = vertex_buffer_size;
+					vertex_buffer_size++;
+				}
+				index_buffer_size++;
+			}
+			vertex_buffers.push_back(std::make_shared<cg::resource<cg::vertex>>(vertex_buffer_size));
+			index_buffers.push_back(std::make_shared<cg::resource<unsigned int>>(index_buffer_size));
+			
+
+			index_offset += fv;
+			index_buffer_size += fv;
+		}
+	}
 }
 
 float3 cg::world::model::compute_normal(const tinyobj::attrib_t& attrib, const tinyobj::mesh_t& mesh, size_t index_offset)
