@@ -17,28 +17,27 @@ cg::world::model::~model() {}
 void cg::world::model::load_obj(const std::filesystem::path& model_path)
 {
 	tinyobj::ObjReaderConfig readerConfig;
-	readerConfig.mtl_search_path = model_path.parent_path().string(); // Path to material files
+	readerConfig.mtl_search_path = model_path.parent_path().string();// Path to material files
 	readerConfig.triangulate = true;
 
 	tinyobj::ObjReader reader;
-	if(!reader.ParseFromFile(model_path.string(), readerConfig))
+	if (!reader.ParseFromFile(model_path.string(), readerConfig))
 	{
 		if (!reader.Error().empty())
 			THROW_ERROR(reader.Error());
 	}
 
-	auto &shapes = reader.GetShapes();
-	auto &attrib = reader.GetAttrib();
-	auto &materials = reader.GetMaterials();
+	auto& shapes = reader.GetShapes();
+	auto& attrib = reader.GetAttrib();
+	auto& materials = reader.GetMaterials();
 
 	allocate_buffers(shapes);
 	fill_buffers(shapes, attrib, materials, model_path.parent_path());
-
 }
 
 void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 {
-	for(const auto& shape : shapes)
+	for (const auto& shape: shapes)
 	{
 		size_t index_offset = 0;
 		unsigned int vertex_buffer_size = 0;
@@ -46,7 +45,7 @@ void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 		std::map<std::tuple<int, int, int>, unsigned int> index_map;
 		const auto& mesh = shape.mesh;
 
-		for (const auto& fv : mesh.num_face_vertices)
+		for (const auto& fv: mesh.num_face_vertices)
 		{
 			for (size_t v = 0; v < fv; v++)
 			{
@@ -59,25 +58,51 @@ void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 				}
 				index_buffer_size++;
 			}
-			vertex_buffers.push_back(std::make_shared<cg::resource<cg::vertex>>(vertex_buffer_size));
-			index_buffers.push_back(std::make_shared<cg::resource<unsigned int>>(index_buffer_size));
-			
-
 			index_offset += fv;
-			index_buffer_size += fv;
 		}
+		vertex_buffers.push_back(std::make_shared<cg::resource<cg::vertex>>(vertex_buffer_size));
+		index_buffers.push_back(std::make_shared<cg::resource<unsigned int>>(index_buffer_size));
 	}
+	textures.resize(shapes.size());
 }
 
 float3 cg::world::model::compute_normal(const tinyobj::attrib_t& attrib, const tinyobj::mesh_t& mesh, size_t index_offset)
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
-	return float3{};
+	auto a_id = mesh.indices[index_offset].vertex_index;
+	auto b_id = mesh.indices[index_offset + 1].vertex_index;
+	auto c_id = mesh.indices[index_offset + 2].vertex_index;
+
+	auto a = float3{attrib.vertices[3 * a_id], attrib.vertices[3 * a_id + 1], attrib.vertices[3 * a_id + 2]};
+	auto b = float3{attrib.vertices[3 * b_id], attrib.vertices[3 * b_id + 1], attrib.vertices[3 * b_id + 2]};
+	auto c = float3{attrib.vertices[3 * c_id], attrib.vertices[3 * c_id + 1], attrib.vertices[3 * c_id + 2]};
+
+	auto ab = b - a;
+	auto ac = c - a;
+
+	auto normal = cross(ab, ac);
+	normal = normalize(normal);
+
+	return normal;
 }
 
 void model::fill_vertex_data(cg::vertex& vertex, const tinyobj::attrib_t& attrib, const tinyobj::index_t idx, const float3 computed_normal, const tinyobj::material_t material)
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
+	vertex.x = attrib.vertices[3 * idx.vertex_index];
+	vertex.y = attrib.vertices[3 * idx.vertex_index + 1];
+	vertex.z = attrib.vertices[3 * idx.vertex_index + 2];
+
+	if (idx.normal_index < 0)
+	{
+		vertex.nx = computed_normal.x;
+		vertex.ny = computed_normal.y;
+		vertex.nz = computed_normal.z;
+	}
+	else
+	{
+		vertex.nx = attrib.normals[3 * idx.normal_index];
+		vertex.ny = attrib.normals[3 * idx.normal_index + 1];
+		vertex.nz = attrib.normals[3 * idx.normal_index + 2];
+	}
 }
 
 void model::fill_buffers(const std::vector<tinyobj::shape_t>& shapes, const tinyobj::attrib_t& attrib, const std::vector<tinyobj::material_t>& materials, const std::filesystem::path& base_folder)
