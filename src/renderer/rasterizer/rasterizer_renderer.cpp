@@ -31,10 +31,19 @@ void cg::renderer::rasterization_renderer::init()
 }
 void cg::renderer::rasterization_renderer::render()
 {
-	auto start = std::chrono::high_resolution_clock::now();
 	rasterizer->clear_render_target({0, 0, 0});
-	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << "Clear render target: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+
+	float4x4 matrix = mul(
+			camera->get_projection_matrix(),
+			camera->get_view_matrix(),
+			model->get_world_matrix());
+
+	rasterizer->vertex_shader = [&](float4 vertex, cg::vertex vertex_data) {
+		auto processed = mul(matrix, vertex);
+		return std::pair(processed, vertex_data);
+	};
+	
+	auto start = std::chrono::high_resolution_clock::now();
 
 	for (size_t shape_id = 0; shape_id < model->get_index_buffers().size(); shape_id++)
 	{
@@ -43,10 +52,11 @@ void cg::renderer::rasterization_renderer::render()
 		rasterizer->draw(model->get_index_buffers()[shape_id]->get_number_of_elements(), 0);
 	}
 
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << "Clear render target: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+
 	cg::utils::save_resource(*render_target, settings->result_path);
 
-
-	// TODO 1.04 Implement `vertex_shader` lambda for the instance of `cg::renderer::rasterizer'
 	// TODO Lab: 1.05 Implement `pixel_shader` lambda for the instance of `cg::renderer::rasterizer`
 	// TODO Lab: 1.03 Adjust `cg::renderer::rasterization_renderer` class to consume `cg::world::model`
 }
