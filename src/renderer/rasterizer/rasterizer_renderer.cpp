@@ -42,7 +42,7 @@ void cg::renderer::rasterization_renderer::render()
 		auto processed = mul(matrix, vertex);
 		return std::pair(processed, vertex_data);
 	};
-	
+
 	auto start = std::chrono::high_resolution_clock::now();
 
 	for (size_t shape_id = 0; shape_id < model->get_index_buffers().size(); shape_id++)
@@ -53,7 +53,7 @@ void cg::renderer::rasterization_renderer::render()
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << "Clear render target: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+	std::cout << "Time took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 
 	cg::utils::save_resource(*render_target, settings->result_path);
 
