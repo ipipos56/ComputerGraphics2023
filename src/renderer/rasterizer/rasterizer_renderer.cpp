@@ -32,8 +32,6 @@ void cg::renderer::rasterization_renderer::render()
 		rasterizer->draw(model->get_index_buffers()[shape_id]->get_number_of_elements(), 0);
 	}
 
-	end = std::chrono::high_resolution_clock::now();
-
 	cg::utils::save_resource(*render_target, settings->result_path);
 
 
