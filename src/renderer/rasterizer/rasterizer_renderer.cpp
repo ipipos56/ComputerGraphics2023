@@ -14,6 +14,10 @@ void cg::renderer::rasterization_renderer::init()
 	model = std::make_shared<cg::world::model>();
 	model->load_obj(settings->model_path);
 
+	depth_buffer = std::make_shared<cg::resource<float>>(settings->width, settings->height);
+	# TODO sdfsdfsdf
+
+
 	camera = std::make_shared<cg::world::camera>();
 	camera->set_height(static_cast<float>(settings->height));
 	camera->set_width(static_cast<float>(settings->width));
