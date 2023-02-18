@@ -16,12 +16,29 @@ cg::world::model::~model() {}
 
 void cg::world::model::load_obj(const std::filesystem::path& model_path)
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
+	tinyobj::ObjReaderConfig readerConfig;
+	readerConfig.mtl_search_path = model_path.parent_path().string(); // Path to material files
+	readerConfig.triangulate = true;
+
+	tinyobj::ObjReader reader;
+	if(!reader.ParseFromFile(model_path.string(), readerConfig))
+	{
+		if (!reader.Error().empty())
+			THROW_ERROR(reader.Error());
+	}
+
+	auto &shapes = reader.GetShapes();
+	auto &attrib = reader.GetAttrib();
+	auto &materials = reader.GetMaterials();
+
+	allocate_buffers(shapes);
+	fill_buffers(shapes, attrib, materials, model_path.parent_path());
+	
 }
 
 void model::allocate_buffers(const std::vector<tinyobj::shape_t>& shapes)
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
+	tinyobj::mesh_t mesh = shapes[0].mesh;
 }
 
 float3 cg::world::model::compute_normal(const tinyobj::attrib_t& attrib, const tinyobj::mesh_t& mesh, size_t index_offset)
