@@ -103,25 +103,79 @@ void model::fill_vertex_data(cg::vertex& vertex, const tinyobj::attrib_t& attrib
 		vertex.ny = attrib.normals[3 * idx.normal_index + 1];
 		vertex.nz = attrib.normals[3 * idx.normal_index + 2];
 	}
+
+	vertex.u = idx.texcoord_index < 0 ? 0.0f : attrib.texcoords[2 * idx.texcoord_index];
+	vertex.v = idx.texcoord_index < 0 ? 0.0f : attrib.texcoords[2 * idx.texcoord_index + 1];
+
+	vertex.ambient_r = material.ambient[0];
+	vertex.ambient_g = material.ambient[1];
+	vertex.ambient_b = material.ambient[2];
+
+	vertex.diffuse_r = material.diffuse[0];
+	vertex.diffuse_g = material.diffuse[1];
+	vertex.diffuse_b = material.diffuse[2];
+
+	vertex.emissive_r = material.emission[0];
+	vertex.emissive_g = material.emission[1];
+	vertex.emissive_b = material.emission[2];
+
 }
 
 void model::fill_buffers(const std::vector<tinyobj::shape_t>& shapes, const tinyobj::attrib_t& attrib, const std::vector<tinyobj::material_t>& materials, const std::filesystem::path& base_folder)
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
+	for(size_t s = 0;s<shapes.size();s++)
+	{
+		size_t index_offset = 0;
+		unsigned int vertex_buffer_id = 0;
+		unsigned int index_buffer_id = 0;
+
+		auto vertex_buffer = vertex_buffers[s];
+		auto index_buffer = index_buffers[s];
+		std::map<std::tuple<int, int, int>, unsigned int> index_map;
+		const auto& mesh = shapes[s].mesh;
+
+		for (size_t f = 0; f<mesh.num_face_vertices.size();f++)
+		{
+			auto fv = mesh.num_face_vertices[f];
+			float3 computed_normal;
+			if (mesh.indices[index_offset].normal_index < 0)
+			{
+				computed_normal = compute_normal(attrib, mesh, index_offset);
+			}
+
+			for (size_t v = 0; v < fv; v++)
+			{
+				tinyobj::index_t idx = mesh.indices[index_offset + v];
+				auto idx_tuple = std::make_tuple(idx.vertex_index, idx.normal_index, idx.texcoord_index);
+				if (index_map.count(idx_tuple) == 0)
+				{
+					cg::vertex& vertex = vertex_buffer->item(vertex_buffer_id);
+					fill_vertex_data(vertex, attrib, idx, computed_normal, materials[mesh.material_ids[f]]);
+					index_map[idx_tuple] = vertex_buffer_id;
+					vertex_buffer_id++;
+				}
+				index_buffer->item(index_buffer_id) = index_map[idx_tuple];
+				index_buffer_id++;
+			}
+			index_offset += fv;
+		}
+		if(!materials[mesh.material_ids[0]].diffuse_texname.empty())
+		{
+			textures[s] = base_folder / materials[mesh.material_ids[0]].diffuse_texname;
+		}
+	}
 }
 
 
 const std::vector<std::shared_ptr<cg::resource<cg::vertex>>>&
 cg::world::model::get_vertex_buffers() const
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
 	return vertex_buffers;
 }
 
 const std::vector<std::shared_ptr<cg::resource<unsigned int>>>&
 cg::world::model::get_index_buffers() const
 {
-	// TODO Lab: 1.03 Using `tinyobjloader` implement `load_obj`, `allocate_buffers`, `compute_normal`, `fill_vertex_data`, `fill_buffers`, `get_vertex_buffers`, `get_index_buffers` methods of `cg::world::model` class
 	return index_buffers;
 }
 
