@@ -53,7 +53,9 @@ void cg::renderer::rasterization_renderer::render()
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << "Time took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
+
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	std::cout << "Render time: " << (double) duration.count() / 1000 << " ms" << std::endl;
 
 	cg::utils::save_resource(*render_target, settings->result_path);
 
