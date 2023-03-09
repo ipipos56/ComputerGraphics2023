@@ -14,8 +14,9 @@ void cg::renderer::rasterization_renderer::init()
 	model = std::make_shared<cg::world::model>();
 	model->load_obj(settings->model_path);
 
-	depth_buffer = std::make_shared<cg::resource<float>>(settings->width, settings->height);
-	# TODO sdfsdfsdf
+	depth_buffer = std::make_shared<cg::resource<float>>(
+			settings->width, settings->height);
+	rasterizer->set_render_target(render_target, depth_buffer);
 
 
 	camera = std::make_shared<cg::world::camera>();
@@ -31,7 +32,6 @@ void cg::renderer::rasterization_renderer::init()
 	camera->set_z_near(settings->camera_z_near);
 	camera->set_z_far(settings->camera_z_far);
 
-	// TODO Lab: 1.06 Add depth buffer in `cg::renderer::rasterization_renderer`
 }
 void cg::renderer::rasterization_renderer::render()
 {
@@ -47,7 +47,7 @@ void cg::renderer::rasterization_renderer::render()
 		return std::pair(processed, vertex_data);
 	};
 
-	rasterizer->pixel_shader = [](cg::vertex vertex_data, float z) {
+	rasterizer->pixel_shader = [&](cg::vertex vertex_data, float depth) {
 		return cg::color{vertex_data.ambient_r,
 						 vertex_data.ambient_g,
 						 vertex_data.ambient_b};
@@ -68,8 +68,6 @@ void cg::renderer::rasterization_renderer::render()
 	std::cout << "Render time: " << (double) duration.count() / 1000 << " ms" << std::endl;
 
 	cg::utils::save_resource(*render_target, settings->result_path);
-
-	// TODO Lab: 1.03 Adjust `cg::renderer::rasterization_renderer` class to consume `cg::world::model`
 }
 
 void cg::renderer::rasterization_renderer::destroy()

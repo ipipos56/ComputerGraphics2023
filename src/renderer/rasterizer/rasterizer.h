@@ -132,13 +132,13 @@ namespace cg::renderer
 			float2 bounding_box_begin = round(
 					clamp(min_vertex,
 						  float2{0.f, 0.f},
-						  float2{width - 1, height - 1}));
+						  float2{float(width - 1), float(height - 1)}));
 
 			float2 max_vertex = max(vertex_a, max(vertex_b, vertex_c));
 			float2 bounding_box_end = round(
 					clamp(max_vertex,
 						  float2{0.f, 0.f},
-						  float2{width - 1, height - 1}));
+						  float2{float(width - 1), float(height - 1)}));
 
 			float edge = edge_function(vertex_a, vertex_b, vertex_c);
 
@@ -179,7 +179,6 @@ namespace cg::renderer
 			}
 		}
 
-		// TODO Lab: 1.06 Add `Depth test` stage to `draw` method of `cg::renderer::rasterizer`
 	}
 
 	template<typename VB, typename RT>
@@ -192,7 +191,6 @@ namespace cg::renderer
 	template<typename VB, typename RT>
 	inline bool rasterizer<VB, RT>::depth_test(float z, size_t x, size_t y)
 	{
-		// TODO Lab: 1.06 Implement `depth_test` function of `cg::renderer::rasterizer` class
 		if (!depth_buffer)
 		{
 			return true;
