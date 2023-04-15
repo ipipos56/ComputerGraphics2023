@@ -409,14 +409,14 @@ void cg::renderer::dx12_renderer::populate_command_list()
 	command_list->SetGraphicsRootDescriptorTable(0, cbv_srv_heap.get_gpu_descriptor_handle(0));
 	command_list->RSSetViewports(1, &view_port);
 	command_list->RSSetScissorRects(1, &scissor_rect);
+	command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//	D3D12_RESOURCE_BARRIER begin_barriers[] = {
-	//		CD3DX12_RESOURCE_BARRIER::Transition(render_targets[frame_index].Get(),
-	//												 D3D12_RESOURCE_STATE_PRESENT,
-	//												 D3D12_RESOURCE_STATE_RENDER_TARGET)
-	//	};
-	//
-	//	command_list->ResourceBarrier(_countof(begin_barriers), begin_barriers);
+	D3D12_RESOURCE_BARRIER begin_barriers[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(render_targets[frame_index].Get(),
+												 D3D12_RESOURCE_STATE_PRESENT,
+												 D3D12_RESOURCE_STATE_RENDER_TARGET)};
+
+	command_list->ResourceBarrier(_countof(begin_barriers), begin_barriers);
 
 	//Drawing
 	command_list->OMSetRenderTargets(1,
